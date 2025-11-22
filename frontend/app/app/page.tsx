@@ -54,22 +54,6 @@ export default function AppPage() {
     <main className="space-y-8 pb-14">
       <Navbar />
 
-      <section className="card p-6">
-        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-sm uppercase tracking-[0.2em] text-slate-500">Inline trading workspace</p>
-            <h1 className="text-2xl font-semibold text-midnight">Browse every opportunity, trade in place</h1>
-            <p className="text-sm text-slate-600">
-              Dark trading windows stay private until they lock. Pick a market, place a YES trade, and keep the form on-screen
-              while you scan the rest of the directory.
-            </p>
-          </div>
-          <Link href="#markets" className="btn-secondary">
-            Jump to markets
-          </Link>
-        </div>
-      </section>
-
       <section id="markets" className="grid gap-6 lg:grid-cols-5 lg:items-start">
         <div className="lg:col-span-2 space-y-4">
           <MarketDirectory
