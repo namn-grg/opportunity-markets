@@ -19,11 +19,10 @@ contract OpportunityFactory is Ownable {
     struct CreateParams {
         address sponsor;
         address collateralToken;
-        uint256 initialCollateral;
-        uint256 initialVirtualYes;
         uint16 penaltyBps;
         uint256 opportunityWindowEnd;
         bytes32 questionHash;
+        OpportunityMarket.OptionConfig[] options;
     }
 
     struct MarketConfig {
@@ -33,6 +32,7 @@ contract OpportunityFactory is Ownable {
         uint16 penaltyBps;
         uint256 opportunityWindowEnd;
         bytes32 questionHash;
+        uint256 optionCount;
     }
 
     MarketConfig[] public markets;
@@ -51,27 +51,29 @@ contract OpportunityFactory is Ownable {
     function createMarket(CreateParams calldata params) external returns (address marketAddr) {
         address sponsor_ = params.sponsor == address(0) ? msg.sender : params.sponsor;
         if (msg.sender != sponsor_ && msg.sender != owner()) revert UnauthorizedCreator();
-        if (
-            sponsor_ == address(0) || params.collateralToken == address(0) || params.initialCollateral == 0
-                || params.initialVirtualYes == 0 || params.penaltyBps > MAX_BPS
-        ) {
+        if (sponsor_ == address(0) || params.collateralToken == address(0) || params.penaltyBps > MAX_BPS) {
             revert InvalidParams();
         }
-        if (params.initialCollateral < params.initialVirtualYes) {
-            revert UnderCollateralized();
+        if (params.options.length == 0) revert InvalidParams();
+
+        uint256 totalInitialCollateral;
+        for (uint256 i = 0; i < params.options.length; ++i) {
+            OpportunityMarket.OptionConfig calldata cfg = params.options[i];
+            if (cfg.initialCollateral == 0 || cfg.initialVirtualYes == 0) revert InvalidParams();
+            if (cfg.initialCollateral < cfg.initialVirtualYes) revert UnderCollateralized();
+            totalInitialCollateral += cfg.initialCollateral;
         }
 
         OpportunityMarket market = new OpportunityMarket(
             sponsor_,
             IERC20(params.collateralToken),
-            params.initialCollateral,
-            params.initialVirtualYes,
             params.penaltyBps,
             params.opportunityWindowEnd,
-            params.questionHash
+            params.questionHash,
+            params.options
         );
 
-        IERC20(params.collateralToken).safeTransferFrom(sponsor_, address(market), params.initialCollateral);
+        IERC20(params.collateralToken).safeTransferFrom(sponsor_, address(market), totalInitialCollateral);
 
         markets.push(
             MarketConfig({
@@ -80,7 +82,8 @@ contract OpportunityFactory is Ownable {
                 collateralToken: params.collateralToken,
                 penaltyBps: params.penaltyBps,
                 opportunityWindowEnd: params.opportunityWindowEnd,
-                questionHash: params.questionHash
+                questionHash: params.questionHash,
+                optionCount: params.options.length
             })
         );
 

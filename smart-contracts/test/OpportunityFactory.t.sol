@@ -24,15 +24,14 @@ contract OpportunityFactoryTest is Test {
     }
 
     function testCreateMarketHappyPath() public {
-        OpportunityFactory.CreateParams memory params = OpportunityFactory.CreateParams({
-            sponsor: sponsor,
-            collateralToken: address(collateral),
-            initialCollateral: initialCollateral,
-            initialVirtualYes: initialCollateral,
-            penaltyBps: 1_000,
-            opportunityWindowEnd: block.timestamp + 30 days,
-            questionHash: keccak256("test question")
-        });
+        OpportunityMarket.OptionConfig[] memory configs = _defaultOptions();
+        OpportunityFactory.CreateParams memory params;
+        params.sponsor = sponsor;
+        params.collateralToken = address(collateral);
+        params.penaltyBps = 1_000;
+        params.opportunityWindowEnd = block.timestamp + 30 days;
+        params.questionHash = keccak256("test question");
+        params.options = configs;
 
         vm.prank(sponsor);
         collateral.approve(address(factory), initialCollateral);
@@ -48,6 +47,7 @@ contract OpportunityFactoryTest is Test {
         assertEq(cfg.sponsor, sponsor);
         assertEq(cfg.collateralToken, address(collateral));
         assertEq(cfg.penaltyBps, params.penaltyBps);
+        assertEq(cfg.optionCount, configs.length);
 
         OpportunityMarket market = OpportunityMarket(marketAddr);
         assertEq(address(market.collateral()), address(collateral));
@@ -57,15 +57,13 @@ contract OpportunityFactoryTest is Test {
     }
 
     function testUnauthorizedCreatorReverts() public {
-        OpportunityFactory.CreateParams memory params = OpportunityFactory.CreateParams({
-            sponsor: sponsor,
-            collateralToken: address(collateral),
-            initialCollateral: initialCollateral,
-            initialVirtualYes: initialCollateral,
-            penaltyBps: 1_000,
-            opportunityWindowEnd: block.timestamp + 30 days,
-            questionHash: keccak256("test question")
-        });
+        OpportunityFactory.CreateParams memory params;
+        params.sponsor = sponsor;
+        params.collateralToken = address(collateral);
+        params.penaltyBps = 1_000;
+        params.opportunityWindowEnd = block.timestamp + 30 days;
+        params.questionHash = keccak256("test question");
+        params.options = _defaultOptions();
 
         vm.prank(address(0xCAFE));
         vm.expectRevert(OpportunityFactory.UnauthorizedCreator.selector);
@@ -73,15 +71,13 @@ contract OpportunityFactoryTest is Test {
     }
 
     function testCreateMarketRevertsWhenUndercollateralized() public {
-        OpportunityFactory.CreateParams memory params = OpportunityFactory.CreateParams({
-            sponsor: sponsor,
-            collateralToken: address(collateral),
-            initialCollateral: initialCollateral / 2,
-            initialVirtualYes: initialCollateral,
-            penaltyBps: 1_000,
-            opportunityWindowEnd: block.timestamp + 30 days,
-            questionHash: keccak256("test question")
-        });
+        OpportunityFactory.CreateParams memory params;
+        params.sponsor = sponsor;
+        params.collateralToken = address(collateral);
+        params.penaltyBps = 1_000;
+        params.opportunityWindowEnd = block.timestamp + 30 days;
+        params.questionHash = keccak256("test question");
+        params.options = _undercollateralizedOptions();
 
         vm.prank(sponsor);
         collateral.approve(address(factory), initialCollateral);
@@ -89,5 +85,27 @@ contract OpportunityFactoryTest is Test {
         vm.prank(sponsor);
         vm.expectRevert(OpportunityFactory.UnderCollateralized.selector);
         factory.createMarket(params);
+    }
+
+    function _defaultOptions() internal view returns (OpportunityMarket.OptionConfig[] memory configs) {
+        configs = new OpportunityMarket.OptionConfig[](2);
+        uint256 perOption = initialCollateral / 2;
+        bytes32 base = keccak256("option");
+        for (uint256 i = 0; i < configs.length; ++i) {
+            configs[i] = OpportunityMarket.OptionConfig({
+                optionHash: keccak256(abi.encode(base, i)),
+                initialCollateral: perOption,
+                initialVirtualYes: perOption
+            });
+        }
+    }
+
+    function _undercollateralizedOptions() internal view returns (OpportunityMarket.OptionConfig[] memory configs) {
+        configs = new OpportunityMarket.OptionConfig[](1);
+        configs[0] = OpportunityMarket.OptionConfig({
+            optionHash: keccak256("undercollateralized"),
+            initialCollateral: initialCollateral / 4,
+            initialVirtualYes: initialCollateral / 2
+        });
     }
 }

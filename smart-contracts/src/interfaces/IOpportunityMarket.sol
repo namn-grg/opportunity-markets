@@ -19,15 +19,25 @@ interface IOpportunityMarket {
         bytes32 questionHash;
     }
 
-    function buyYes(uint256 collateralIn, uint256 minYesOut, uint256 maxPrice) external returns (uint256 yesOut);
+    struct OptionView {
+        bytes32 optionHash;
+        uint256 collateralReserve;
+        uint256 virtualYesReserve;
+        uint256 totalYesShares;
+        uint256 totalStake;
+    }
+
+    function buyYes(uint256 optionId, uint256 collateralIn, uint256 minYesOut, uint256 maxPrice)
+        external
+        returns (uint256 yesOut);
 
     function lock() external;
 
-    function resolveYes() external;
+    function resolveYes(uint256 optionId) external;
 
     function resolveNo() external;
 
-    function claimYes() external returns (uint256 collateralOut);
+    function claimYes(uint256 optionId) external returns (uint256 collateralOut);
 
     function claimNo() external returns (uint256 refundOut);
 
@@ -45,15 +55,28 @@ interface IOpportunityMarket {
 
     function state() external view returns (State);
 
+    function optionCount() external view returns (uint256);
+
+    function winningOptionId() external view returns (uint256);
+
+    function hasWinningOption() external view returns (bool);
+
     function totalYesShares() external view returns (uint256);
 
     function refundLiability() external view returns (uint256);
 
     function penaltyAvailable() external view returns (uint256);
 
-    function yesBalance(address user) external view returns (uint256);
+    function yesBalance(address user, uint256 optionId) external view returns (uint256);
 
     function stakeAmount(address user) external view returns (uint256);
 
-    function getReserves() external view returns (uint256 collateralReserve, uint256 virtualYesReserve);
+    function stakeAmount(address user, uint256 optionId) external view returns (uint256);
+
+    function getReserves(uint256 optionId)
+        external
+        view
+        returns (uint256 collateralReserve, uint256 virtualYesReserve);
+
+    function getOption(uint256 optionId) external view returns (OptionView memory);
 }
