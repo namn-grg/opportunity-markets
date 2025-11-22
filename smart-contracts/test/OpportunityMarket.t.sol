@@ -35,7 +35,6 @@ contract OpportunityMarketTest is Test {
             initialYes,
             penaltyBps,
             block.timestamp + 7 days,
-            true,
             questionHash
         );
 
@@ -75,9 +74,7 @@ contract OpportunityMarketTest is Test {
         vm.prank(sponsor);
         market.lock();
 
-        vm.expectRevert(
-            abi.encodeWithSelector(OpportunityMarket.InvalidState.selector, IOpportunityMarket.State.Locked)
-        );
+        vm.expectRevert(OpportunityMarket.TradingClosed.selector);
         vm.prank(trader);
         market.buyYes(1 ether, 1, type(uint256).max);
     }
@@ -131,26 +128,9 @@ contract OpportunityMarketTest is Test {
     }
 
     function testSponsorCannotTradeWhenFlagged() public {
-        OpportunityMarket restricted = new OpportunityMarket(
-            sponsor,
-            IERC20(address(collateral)),
-            initialCollateral,
-            initialYes,
-            penaltyBps,
-            block.timestamp + 7 days,
-            false,
-            questionHash
-        );
-
-        vm.prank(sponsor);
-        collateral.transfer(address(restricted), initialCollateral);
-
-        vm.prank(sponsor);
-        collateral.approve(address(restricted), type(uint256).max);
-
         vm.expectRevert(OpportunityMarket.SponsorTradingBlocked.selector);
         vm.prank(sponsor);
-        restricted.buyYes(1 ether, 1, type(uint256).max);
+        market.buyYes(1 ether, 1, type(uint256).max);
     }
 
     function testPenaltyUpperBoundEnforced() public {
@@ -162,9 +142,69 @@ contract OpportunityMarketTest is Test {
             initialYes,
             uint16(10_001),
             block.timestamp + 7 days,
-            true,
             questionHash
         );
+    }
+
+    function testInitialCollateralMustCoverVirtualYes() public {
+        vm.expectRevert(OpportunityMarket.InitialCollateralTooLow.selector);
+        new OpportunityMarket(
+            sponsor,
+            IERC20(address(collateral)),
+            initialCollateral / 2,
+            initialYes,
+            penaltyBps,
+            block.timestamp + 7 days,
+            questionHash
+        );
+    }
+
+    function testTradingStopsAfterWindowEndAutomatically() public {
+        vm.warp(block.timestamp + 8 days);
+        vm.expectRevert(OpportunityMarket.TradingClosed.selector);
+        vm.prank(trader);
+        market.buyYes(1 ether, 1, type(uint256).max);
+    }
+
+    function testResolveYesAutoLocksAfterWindow() public {
+        vm.warp(block.timestamp + 8 days);
+        vm.prank(sponsor);
+        market.resolveYes();
+        assertEq(uint256(market.state()), uint256(IOpportunityMarket.State.ResolvedYes));
+    }
+
+    function testResolveNoAutoLocksAfterWindow() public {
+        uint256 collateralIn = 20 ether;
+        _executeBuy(trader, collateralIn, type(uint256).max);
+
+        vm.warp(block.timestamp + 8 days);
+        vm.prank(sponsor);
+        market.resolveNo();
+
+        uint256 penalty = (collateralIn * penaltyBps) / 10_000;
+        assertEq(market.penaltyAvailable(), penalty);
+        assertEq(uint256(market.state()), uint256(IOpportunityMarket.State.ResolvedNo));
+    }
+
+    function testFuzzReserveMatchesBalance(address user, uint256 amount) public {
+        vm.assume(user != address(0));
+        vm.assume(user != sponsor);
+
+        uint256 collateralIn = bound(amount, 1 ether, 200 ether);
+        collateral.mint(user, collateralIn);
+        vm.prank(user);
+        collateral.approve(address(market), collateralIn);
+
+        uint256 yesOutMin;
+        {
+            (uint256 yesOut,) = _quote(collateralIn);
+            yesOutMin = yesOut;
+        }
+
+        vm.prank(user);
+        market.buyYes(collateralIn, yesOutMin, type(uint256).max);
+
+        assertEq(collateral.balanceOf(address(market)), market.reserveCollateral());
     }
 
     function _executeBuy(address user, uint256 collateralIn, uint256 maxPrice) internal returns (uint256) {
@@ -174,9 +214,9 @@ contract OpportunityMarketTest is Test {
     }
 
     function _quote(uint256 collateralIn) internal view returns (uint256 yesOut, uint256 newReserveYes) {
-        uint256 newReserveCollateral = market.reserveCollateral() + collateralIn;
-        uint256 kValue = market.k();
-        newReserveYes = kValue / newReserveCollateral;
-        yesOut = market.reserveYes() - newReserveYes;
+        uint256 reserveCollateral = market.reserveCollateral();
+        uint256 reserveYes = market.reserveYes();
+        yesOut = (reserveYes * collateralIn) / (reserveCollateral + collateralIn);
+        newReserveYes = reserveYes - yesOut;
     }
 }

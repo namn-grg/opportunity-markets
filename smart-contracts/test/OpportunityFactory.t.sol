@@ -31,7 +31,6 @@ contract OpportunityFactoryTest is Test {
             initialVirtualYes: initialCollateral,
             penaltyBps: 1_000,
             opportunityWindowEnd: block.timestamp + 30 days,
-            sponsorCanTrade: false,
             questionHash: keccak256("test question")
         });
 
@@ -49,7 +48,6 @@ contract OpportunityFactoryTest is Test {
         assertEq(cfg.sponsor, sponsor);
         assertEq(cfg.collateralToken, address(collateral));
         assertEq(cfg.penaltyBps, params.penaltyBps);
-        assertFalse(cfg.sponsorCanTrade);
 
         OpportunityMarket market = OpportunityMarket(marketAddr);
         assertEq(address(market.collateral()), address(collateral));
@@ -66,7 +64,6 @@ contract OpportunityFactoryTest is Test {
             initialVirtualYes: initialCollateral,
             penaltyBps: 1_000,
             opportunityWindowEnd: block.timestamp + 30 days,
-            sponsorCanTrade: true,
             questionHash: keccak256("test question")
         });
 
@@ -74,5 +71,23 @@ contract OpportunityFactoryTest is Test {
         vm.expectRevert(OpportunityFactory.UnauthorizedCreator.selector);
         factory.createMarket(params);
     }
-}
 
+    function testCreateMarketRevertsWhenUndercollateralized() public {
+        OpportunityFactory.CreateParams memory params = OpportunityFactory.CreateParams({
+            sponsor: sponsor,
+            collateralToken: address(collateral),
+            initialCollateral: initialCollateral / 2,
+            initialVirtualYes: initialCollateral,
+            penaltyBps: 1_000,
+            opportunityWindowEnd: block.timestamp + 30 days,
+            questionHash: keccak256("test question")
+        });
+
+        vm.prank(sponsor);
+        collateral.approve(address(factory), initialCollateral);
+
+        vm.prank(sponsor);
+        vm.expectRevert(OpportunityFactory.UnderCollateralized.selector);
+        factory.createMarket(params);
+    }
+}

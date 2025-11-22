@@ -16,7 +16,6 @@ interface IOpportunityMarket {
         address collateralToken;
         uint16 penaltyBps;
         uint256 opportunityWindowEnd;
-        bool sponsorCanTrade;
         bytes32 questionHash;
     }
 
@@ -41,8 +40,6 @@ interface IOpportunityMarket {
     function penaltyBps() external view returns (uint16);
 
     function opportunityWindowEnd() external view returns (uint256);
-
-    function sponsorCanTrade() external view returns (bool);
 
     function questionHash() external view returns (bytes32);
 

@@ -23,7 +23,6 @@ contract OpportunityFactory is Ownable {
         uint256 initialVirtualYes;
         uint16 penaltyBps;
         uint256 opportunityWindowEnd;
-        bool sponsorCanTrade;
         bytes32 questionHash;
     }
 
@@ -33,7 +32,6 @@ contract OpportunityFactory is Ownable {
         address collateralToken;
         uint16 penaltyBps;
         uint256 opportunityWindowEnd;
-        bool sponsorCanTrade;
         bytes32 questionHash;
     }
 
@@ -46,6 +44,7 @@ contract OpportunityFactory is Ownable {
 
     error InvalidParams();
     error UnauthorizedCreator();
+    error UnderCollateralized();
 
     constructor(address initialOwner) Ownable(initialOwner == address(0) ? msg.sender : initialOwner) {}
 
@@ -58,6 +57,9 @@ contract OpportunityFactory is Ownable {
         ) {
             revert InvalidParams();
         }
+        if (params.initialCollateral < params.initialVirtualYes) {
+            revert UnderCollateralized();
+        }
 
         OpportunityMarket market = new OpportunityMarket(
             sponsor_,
@@ -66,7 +68,6 @@ contract OpportunityFactory is Ownable {
             params.initialVirtualYes,
             params.penaltyBps,
             params.opportunityWindowEnd,
-            params.sponsorCanTrade,
             params.questionHash
         );
 
@@ -79,7 +80,6 @@ contract OpportunityFactory is Ownable {
                 collateralToken: params.collateralToken,
                 penaltyBps: params.penaltyBps,
                 opportunityWindowEnd: params.opportunityWindowEnd,
-                sponsorCanTrade: params.sponsorCanTrade,
                 questionHash: params.questionHash
             })
         );

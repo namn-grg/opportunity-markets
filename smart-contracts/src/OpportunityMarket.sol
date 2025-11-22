@@ -24,7 +24,6 @@ contract OpportunityMarket is IOpportunityMarket, Ownable, ReentrancyGuard {
     address public immutable override sponsor;
     uint16 public immutable override penaltyBps;
     uint256 public immutable override opportunityWindowEnd;
-    bool public immutable override sponsorCanTrade;
     bytes32 public immutable override questionHash;
 
     State public override state;
@@ -41,7 +40,6 @@ contract OpportunityMarket is IOpportunityMarket, Ownable, ReentrancyGuard {
     mapping(address => uint256) public override yesBalance;
     mapping(address => uint256) public override stakeAmount;
 
-    event YesPurchased(address indexed trader, uint256 collateralIn, uint256 yesOut);
     event Locked(uint256 timestamp);
     event Resolve(State outcome);
     event YesClaimed(address indexed trader, uint256 payout);
@@ -56,6 +54,8 @@ contract OpportunityMarket is IOpportunityMarket, Ownable, ReentrancyGuard {
     error SlippageTooHigh();
     error SponsorTradingBlocked();
     error WindowStillOpen();
+    error TradingClosed();
+    error InitialCollateralTooLow();
     error NothingToClaim();
     error OutstandingClaims();
 
@@ -66,7 +66,6 @@ contract OpportunityMarket is IOpportunityMarket, Ownable, ReentrancyGuard {
         uint256 _initialYes,
         uint16 _penaltyBps,
         uint256 _opportunityWindowEnd,
-        bool _sponsorCanTrade,
         bytes32 _questionHash
     ) Ownable(_sponsor) {
         if (_sponsor == address(0) || address(_collateral) == address(0)) {
@@ -78,12 +77,14 @@ contract OpportunityMarket is IOpportunityMarket, Ownable, ReentrancyGuard {
         if (_penaltyBps > MAX_BPS) {
             revert PenaltyTooLarge();
         }
+        if (_initialCollateral < _initialYes) {
+            revert InitialCollateralTooLow();
+        }
 
         sponsor = _sponsor;
         collateral = _collateral;
         penaltyBps = _penaltyBps;
         opportunityWindowEnd = _opportunityWindowEnd;
-        sponsorCanTrade = _sponsorCanTrade;
         questionHash = _questionHash;
 
         reserveCollateral = _initialCollateral;
@@ -102,13 +103,16 @@ contract OpportunityMarket is IOpportunityMarket, Ownable, ReentrancyGuard {
         nonReentrant
         returns (uint256 yesOut)
     {
+        if (opportunityWindowEnd != 0 && block.timestamp >= opportunityWindowEnd) {
+            _autoLockIfWindowPassed();
+            revert TradingClosed();
+        }
+        _autoLockIfWindowPassed();
         if (state != State.Trading) revert InvalidState(state);
-        if (!sponsorCanTrade && msg.sender == sponsor) revert SponsorTradingBlocked();
+        if (msg.sender == sponsor) revert SponsorTradingBlocked();
         if (collateralIn == 0 || minYesOut == 0 || maxPrice == 0) revert ZeroAmount();
 
-        uint256 newReserveCollateral = reserveCollateral + collateralIn;
-        uint256 newReserveYes = k / newReserveCollateral;
-        yesOut = reserveYes - newReserveYes;
+        yesOut = (reserveYes * collateralIn) / (reserveCollateral + collateralIn);
         if (yesOut == 0 || yesOut < minYesOut) revert SlippageTooHigh();
 
         uint256 executionPrice = (collateralIn * PRICE_SCALE) / yesOut;
@@ -116,16 +120,14 @@ contract OpportunityMarket is IOpportunityMarket, Ownable, ReentrancyGuard {
 
         collateral.safeTransferFrom(msg.sender, address(this), collateralIn);
 
-        reserveCollateral = newReserveCollateral;
-        reserveYes = newReserveYes;
+        reserveCollateral += collateralIn;
+        reserveYes -= yesOut;
         k = reserveCollateral * reserveYes;
 
         yesBalance[msg.sender] += yesOut;
         stakeAmount[msg.sender] += collateralIn;
         totalYesShares += yesOut;
         totalStake += collateralIn;
-
-        emit YesPurchased(msg.sender, collateralIn, yesOut);
     }
 
     function lock() external override onlyOwner {
@@ -138,12 +140,14 @@ contract OpportunityMarket is IOpportunityMarket, Ownable, ReentrancyGuard {
     }
 
     function resolveYes() external override onlyOwner {
+        _autoLockIfWindowPassed();
         if (state != State.Locked) revert InvalidState(state);
         state = State.ResolvedYes;
         emit Resolve(State.ResolvedYes);
     }
 
     function resolveNo() external override onlyOwner {
+        _autoLockIfWindowPassed();
         if (state != State.Locked) revert InvalidState(state);
         state = State.ResolvedNo;
 
@@ -228,5 +232,14 @@ contract OpportunityMarket is IOpportunityMarket, Ownable, ReentrancyGuard {
     function getReserves() external view override returns (uint256 collateralReserve, uint256 virtualYesReserve) {
         collateralReserve = reserveCollateral;
         virtualYesReserve = reserveYes;
+    }
+
+    function _autoLockIfWindowPassed() internal {
+        if (
+            state == State.Trading && opportunityWindowEnd != 0 && block.timestamp >= opportunityWindowEnd
+        ) {
+            state = State.Locked;
+            emit Locked(block.timestamp);
+        }
     }
 }
