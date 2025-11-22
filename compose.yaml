@@ -1,0 +1,18 @@
+services:
+  opportunity-markets:
+    container_name: opportunity-markets
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SAPPHIRE_RPC: ${NEXT_PUBLIC_SAPPHIRE_RPC}
+        NEXT_PUBLIC_FACTORY_ADDRESS: ${NEXT_PUBLIC_FACTORY_ADDRESS}
+    env_file:
+      - .env
+    environment:
+      - NEXT_PUBLIC_SAPPHIRE_RPC=${NEXT_PUBLIC_SAPPHIRE_RPC}
+      - NEXT_PUBLIC_FACTORY_ADDRESS=${NEXT_PUBLIC_FACTORY_ADDRESS}
+    ports:
+      - 3000:3000
+    restart: unless-stopped
+
