@@ -9,7 +9,7 @@ interface Props {
 
 export default function MarketDirectory({ markets, selectedId, onSelect }: Props) {
   return (
-    <section className="card mb-8 p-6">
+    <section id="markets" className="card mb-8 p-6">
       <div className="mb-4 flex items-center justify-between">
         <div>
           <p className="text-sm uppercase tracking-[0.15em] text-slate-500">Market directory</p>

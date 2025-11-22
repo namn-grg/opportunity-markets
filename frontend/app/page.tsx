@@ -5,7 +5,6 @@ import Header from '../components/Header';
 import Hero from '../components/Hero';
 import MarketDirectory from '../components/MarketDirectory';
 import TradingWorkspace from '../components/TradingWorkspace';
-import SponsorWizard from '../components/SponsorWizard';
 import marketsData from '../data/markets.json';
 import { MarketCardData } from '../lib/types';
 
@@ -19,7 +18,6 @@ export default function HomePage() {
       <Hero />
       <MarketDirectory markets={markets} selectedId={selectedMarket.id} onSelect={setSelectedMarket} />
       <TradingWorkspace market={selectedMarket} />
-      <SponsorWizard />
       <section className="card p-6 text-sm text-slate-700">
         <h4 className="text-lg font-semibold text-midnight">Policy drawer</h4>
         <p className="mt-2 text-slate-600">

@@ -6,7 +6,7 @@ A single-page Next.js workspace that mirrors the opportunity-markets article: ca
 - Wallet connect with wagmi injected connector
 - Market directory backed by static metadata (replace with on-chain reads when ready)
 - Trading workspace with privacy reminders and slippage controls for `buyYes`
-- Sponsor creation wizard that hashes questions and options client-side before calling the factory
+- Sponsor creation wizard (now on `/sponsor`) that hashes questions and options client-side before calling the factory
 - Policy drawer summarizing the privacy/penalty story from the article
 
 ## Getting started

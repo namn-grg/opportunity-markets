@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export default function Hero() {
   return (
     <section className="card mb-8 p-6">
@@ -13,6 +15,14 @@ export default function Hero() {
             Pricing is deliberately dark: reserves are hidden on Sapphire and fills only finalize when the window closes. The UI
             mirrors the article’s reputational guardrails with upfront reminders and irreversible-action warnings.
           </p>
+          <div className="flex flex-wrap gap-3 pt-1">
+            <Link href="/sponsor" className="btn-primary">
+              Open sponsor console
+            </Link>
+            <Link href="#markets" className="btn-secondary">
+              Browse active markets
+            </Link>
+          </div>
         </div>
         <div className="flex flex-col gap-2 text-sm text-slate-600">
           <div className="rounded-lg bg-slate-100 px-4 py-3">
