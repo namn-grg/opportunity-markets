@@ -11,8 +11,7 @@ const config: Config = {
     extend: {
       colors: {
         midnight: '#0f172a',
-        ocean: '#0ea5e9',
-        slate: '#cbd5e1'
+        ocean: '#0ea5e9'
       }
     }
   },

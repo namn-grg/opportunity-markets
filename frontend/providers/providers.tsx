@@ -1,27 +1,43 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { WagmiProvider, createConfig, http } from 'wagmi';
-import { injected } from 'wagmi/connectors';
+import { WagmiConfig, configureChains, createConfig } from 'wagmi';
+import { InjectedConnector } from 'wagmi/connectors/injected';
+import { jsonRpcProvider } from 'wagmi/providers/jsonRpc';
 import { sapphireTestnet } from '../lib/chains';
-import { useState } from 'react';
 
 const rpcUrl = process.env.NEXT_PUBLIC_SAPPHIRE_RPC || sapphireTestnet.rpcUrls.default.http[0];
 
+const queryClient = new QueryClient();
+
+const { chains, publicClient, webSocketPublicClient } = configureChains(
+  [sapphireTestnet],
+  [
+    jsonRpcProvider({
+      rpc: () => ({
+        http: rpcUrl
+      })
+    })
+  ]
+);
+
 const wagmiConfig = createConfig({
-  chains: [sapphireTestnet],
-  transports: {
-    [sapphireTestnet.id]: http(rpcUrl)
-  },
-  connectors: [injected({ target: 'metaMask' })],
-  ssr: true
+  autoConnect: true,
+  connectors: [
+    new InjectedConnector({
+      chains,
+      options: { shimDisconnect: true }
+    })
+  ],
+  publicClient,
+  webSocketPublicClient,
+  queryClient
 });
 
 export default function Providers({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient());
   return (
-    <WagmiProvider config={wagmiConfig}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    </WagmiProvider>
+    <QueryClientProvider client={queryClient}>
+      <WagmiConfig config={wagmiConfig}>{children}</WagmiConfig>
+    </QueryClientProvider>
   );
 }

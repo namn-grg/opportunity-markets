@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from 'react';
 import { keccak256, stringToBytes, parseUnits } from 'viem';
-import { useAccount, useWriteContract } from 'wagmi';
+import { useAccount, useContractWrite } from 'wagmi';
 import { opportunityFactoryAbi } from '../lib/contracts';
 import { sapphireTestnet } from '../lib/chains';
 
@@ -10,7 +10,13 @@ const defaultQuestion = 'Which scout submission should the lab back this month?'
 
 export default function SponsorWizard() {
   const { address } = useAccount();
-  const { writeContractAsync, isPending } = useWriteContract();
+  const { writeAsync, isLoading } = useContractWrite({
+    address: process.env.NEXT_PUBLIC_FACTORY_ADDRESS as `0x${string}`,
+    abi: opportunityFactoryAbi,
+    functionName: 'createMarket',
+    chainId: sapphireTestnet.id,
+    mode: 'recklesslyUnprepared'
+  });
   const [question, setQuestion] = useState(defaultQuestion);
   const [penaltyBps, setPenaltyBps] = useState(500);
   const [windowEnd, setWindowEnd] = useState('');
@@ -25,6 +31,10 @@ export default function SponsorWizard() {
     evt.preventDefault();
     setStatus('Preparing deployment...');
     try {
+      if (!writeAsync) {
+        setStatus('Wallet client not ready. Please reconnect and try again.');
+        return;
+      }
       const questionHash = keccak256(stringToBytes(question));
       const opportunityWindowEnd = windowEnd ? Math.floor(new Date(windowEnd).getTime() / 1000) : 0;
       const options = optionLabels.map((label) => ({
@@ -33,11 +43,7 @@ export default function SponsorWizard() {
         initialVirtualYes: parseUnits((Number(initialCollateral || '0') / optionLabels.length).toString(), 18)
       }));
 
-      await writeContractAsync({
-        address: process.env.NEXT_PUBLIC_FACTORY_ADDRESS as `0x${string}`,
-        abi: opportunityFactoryAbi,
-        chainId: sapphireTestnet.id,
-        functionName: 'createMarket',
+      await writeAsync({
         args: [
           {
             sponsor: address as `0x${string}`,
@@ -150,8 +156,8 @@ export default function SponsorWizard() {
             residuals. The UI intentionally avoids broadcasting prices to align with Sapphire storage privacy.
           </p>
         </div>
-        <button type="submit" className="btn-primary" disabled={isPending}>
-          {isPending ? 'Deploying...' : 'Create market'}
+        <button type="submit" className="btn-primary" disabled={isLoading || !writeAsync}>
+          {isLoading ? 'Deploying...' : 'Create market'}
         </button>
         {status && <p className="text-sm text-ocean">{status}</p>}
       </form>
