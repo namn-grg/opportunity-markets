@@ -1,0 +1,17 @@
+{
+  "hint": "Replace with IPFS-backed metadata for production.",
+  "markets": [
+    {
+      "questionHash": "0xaaaabbbbccccddddeeeeffff0000111122223333444455556666777788889999",
+      "title": "Will we sign Artist Nova before Q4 2025?",
+      "short": "Two-week dark book on the Nova label deal.",
+      "owner": "0x9999999999999999999999999999999999999999"
+    },
+    {
+      "questionHash": "0xbbbbccccddddeeeeffff0000111122223333444455556666777788889999aaaa",
+      "title": "Will our lab validate the sapphire protocol add-on?",
+      "short": "Privacy add-on readiness before launch week.",
+      "owner": "0x8888888888888888888888888888888888888888"
+    }
+  ]
+}

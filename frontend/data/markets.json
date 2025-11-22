@@ -1,0 +1,44 @@
+[
+  {
+    "id": 0,
+    "marketAddress": "0x1111111111111111111111111111111111111111",
+    "questionHash": "0xaaaabbbbccccddddeeeeffff0000111122223333444455556666777788889999",
+    "title": "Will we sign Artist Nova before Q4 2025?",
+    "description": "Sponsor offers a two-week confidential book for scouts wagering on a 2025 label deal with Artist Nova.",
+    "opportunityWindowEnd": "2025-12-15T00:00:00.000Z",
+    "penaltyBps": 500,
+    "sponsor": "0x9999999999999999999999999999999999999999",
+    "collateralSymbol": "USDC",
+    "options": [
+      {
+        "label": "Artist Nova signed",
+        "optionHash": "0x1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f"
+      },
+      {
+        "label": "No signature",
+        "optionHash": "0x2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f"
+      }
+    ]
+  },
+  {
+    "id": 1,
+    "marketAddress": "0x2222222222222222222222222222222222222222",
+    "questionHash": "0xbbbbccccddddeeeeffff0000111122223333444455556666777788889999aaaa",
+    "title": "Will our lab validate the sapphire protocol add-on?",
+    "description": "Research scouts stake YES on the lab finishing a Sapphire privacy add-on before launch week.",
+    "opportunityWindowEnd": "2025-12-30T00:00:00.000Z",
+    "penaltyBps": 300,
+    "sponsor": "0x8888888888888888888888888888888888888888",
+    "collateralSymbol": "USDT",
+    "options": [
+      {
+        "label": "Ready for launch",
+        "optionHash": "0x3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f"
+      },
+      {
+        "label": "Delayed",
+        "optionHash": "0x4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f"
+      }
+    ]
+  }
+]
