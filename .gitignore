@@ -1,0 +1,27 @@
+# macOS
+.DS_Store
+
+# Node / frontend
+node_modules/
+.next/
+dist/
+out/
+.vercel/
+
+# Env / secrets
+.env
+.env.*
+
+# Foundry / Solidity
+smart-contracts/out/
+smart-contracts/cache/
+smart-contracts/broadcast/
+
+# Python / misc
+__pycache__/
+.pytest_cache/
+
+# IDE
+.idea/
+.vscode/
+

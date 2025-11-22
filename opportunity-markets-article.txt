@@ -1,0 +1,95 @@
+About
+Team
+Portfolio
+Writing
+Open Source
+Careers
+Research
+Opportunity Markets
+08.18.2025|Dave WhiteMatt Liston
+
+Outline
+
+1. Introduction
+2. Intuition
+1. Motivation
+2. Existing Mechanisms
+3. Mechanism
+1. Example
+2. Privacy
+3. Market Design Details
+1. Liquidity Provision
+2. Unlimited Markets vs. First N
+4. Limiting Exploitation
+4. Conclusion
+Animation by Dave Whyte
+Introduction
+Imagine you spot an unsigned band destined for massive success.
+
+Instead of cold-calling labels, what if you could bet on them yourself?
+
+This paper introduces opportunity markets: private prediction markets where those who find opportunities get paid by those who act on them.
+
+Music labels, research labs, and VCs all want to find the next big thing before the competition. But the people who first spot opportunities often have no institutional connections. Historically, there hasn’t been a clean way for these parties to find each other and transact.
+
+Prediction markets use skin in the game to distill signal from distributed participants. But for someone to make $1M betting XYZ will be huge, someone else needs to bet $1M it won’t. Nobody wants to bet against thousands of opportunities they’ve never even heard of.
+
+The natural counterparties for a market like this would be those who could act: labels, employers, funds, etc. But if they were to provide liquidity in a public prediction market, they’d just be subsidizing information their competitors could use just as easily.
+
+Opportunity markets address this problem by keeping market prices private from everyone but their sponsor.
+
+A label might provide $25,000 of liquidity against “We will sign artist XYZ in 2025,” providing $25,000 of dumb money scouts can win if they’re early. When the label sees the price going up, it’s an early signal to investigate the artist. Prices and positions only become public after an “opportunity window” of e.g. two weeks. It’s like a decentralized scout program where anyone in the world can get skin in the game.
+
+There are real challenges: traders operate blind without prices or position feedback for significant periods, and the self-dealing risks are obvious. Nevertheless, we think there is something interesting to unlock here, and the design space is Wide.
+
+Intuition
+Motivation
+Consider a music fan who discovers an unsigned artist destined for stardom. The fan has valuable information but no record label. The labels that could sign the artist have no idea they exist. Or a researcher who recognizes that an obscure paper contains a breakthrough relevant to self-driving cars. They lack the resources to commercialize it, while companies spending billions on R&D miss it entirely.
+
+This pattern repeats across domains: shop owners spot trends before the major brands, local suppliers spot successful businesses before investors, fans identify athletic talent before it’s obvious.
+
+In each case, someone with deep contextual expertise close to where something exciting is happening has information that would be valuable to someone far away with resources to act on it. But there’s no mechanism to connect them. The person with information can’t monetize their insight, and the person with resources misses the opportunity.
+
+For this paper, we are focusing especially on opportunities that take significant resources both to evaluate and to act on, and have some competitive and time-limited nature to them, such that knowing about them before others who can act on them confers significant benefits.
+
+Existing Mechanisms
+A scout program is one type of solution to the situation described above. They give selected individuals with contextual knowledge a small stake in opportunities they identify. But these programs are limited by trust requirements and evaluation costs. The institution cannot scale beyond its ability to vet both scouts and their recommendations.
+
+Prediction markets are one proven way to aggregate information from abroad and decentralized group of people. But, there’s an incentive problem: for someone to profit significantly by betting that an artist will succeed, others must lose an offsetting amount. It doesn’t make sense for a market maker to bet a large amount of money against the success of an artist they’ve never heard of. Even if institutions subsidized liquidity on these markets to benefit from the information, prediction markets as they are usually deployed today offer their information as a public good. Competitors could free-ride on the same signals, eliminating the advantage. This is the core leak opportunity markets seek to Address.
+
+Mechanism
+Example
+This concept is easiest to explain by example. Imagine a record label that wants to take advantage of opportunity markets to create a decentralized scouting Program.
+
+They create a family of private prediction markets asking “Will we sign Artist X in 2025?” for any artist X. Anyone can create a new market for any artist not yet listed and add it to the family.
+
+The markets are private in the sense that only the sponsor knows the market price at any given time. We discuss some of the challenges involved with this below.
+
+The label acts as market maker, providing, say, up to $25,000 of liquidity per market. They could either promise to provide this amount of liquidity, or prove that they are by, for example, running an AMM in a TEE. This is the “dumb money” that scouts can win if they’re early. As scouts gain conviction in an opportunity, they buy more shares, driving the price up on the market. As prices for a given opportunity rise, the sponsor label will take notice and investigate the opportunity, potentially leading to a signing. If they do ultimately sign the artist, the shares will pay out, and the label has effectively paid a decentralized scouting incentive of up to $25,000.
+
+Privacy
+For opportunity markets to work, only the sponsor can see current prices. If traders could see their fills immediately, they could reconstruct market prices by Trading.
+
+But traders need to know their positions eventually. The solution is an opportunity window—perhaps two weeks—after which traders learn whether their orders filled. This gives sponsors time to investigate promising opportunities before the information becomes public.
+
+After the window closes, there are various design choices: reveal all prices and positions, reveal only positions to individual traders, have different rules for large versus small orders, etc. More sophisticated systems might allow sell-to-close or buy-to-close limit orders before positions are revealed, or even allow trading agents that operate without revealing current positions.
+
+Market Design Details
+Liquidity Provision
+Markets could use either an automated market maker or order book. In either case, liquidity will likely be concentrated within certain bounds. For example, the sponsor might provide liquidity starting around 1% probability, below which the information isn’t useful, and stop providing above 30%, where additional market signal isn’t especially helpful.
+
+Unlimited Markets vs. First N
+For most types of opportunities, like artist signings, there are only a limited number that the sponsor can act on in a given time period. Accordingly, if traders are willing to trust the label to pay out, they can simply promise to pay out on an unlimited number of markets for “Will we sign Artist X in 2025?” and ensure they are never providing so much liquidity across all markets that they won’t be able to pay out if they sign too many artists. For a more permissionless approach, markets can be fully collateralized using a “First N” structure. For example, markets of the form “Will XYZ be among the first 10 artists we sign in 2025?” would require collateralizing each market with 10x the max liquidity since only 10 of them can pay off.
+
+Limiting Exploitation
+Sponsors have both special information about the market state at any given time, and special knowledge about their own process, which opens the risk of exploitative behavior such as hinting they will take advantage of opportunity X while aggressively selling into that market.
+
+It is challenging to address this from a mechanism design standpoint, and we largely have to rely on trust and reputational effects. At the end of the day, market participants will only participate in markets sponsored by a given sponsor if they prove to be fair over a period of time. Some guidelines sponsors might do well to follow include: - Committing never to actively sell into any of their own markets (although buying, or perhaps removing sell liquidity, is likely fine once they make the decision to sign or even investigate an opportunity) - Committing to use any profits from opportunity market trading either to refund traders who participated or as additional liquidity for future markets. Running opportunity markets in a TEE and sharing all trades once the market has resolved can also offer some transparency and mitigation.
+
+Conclusion
+We’re excited to see how Opportunity Markets develop over time. If you’re interested in working on them or other information finance ideas, we’d love to hear from you.
+
+Written by
+Dave WhiteMatt Liston
+Disclaimer: This post is for general information purposes only. It does not constitute investment advice or a recommendation or solicitation to buy or sell any investment and should not be used in the evaluation of the merits of making any investment decision. It should not be relied upon for accounting, legal or tax advice or investment recommendations. This post reflects the current opinions of the authors and is not made on behalf of Paradigm or its affiliates and does not necessarily reflect the opinions of Paradigm, its affiliates or individuals associated with Paradigm. The opinions reflected herein are subject to change without being updated.
+
