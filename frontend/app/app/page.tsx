@@ -1,10 +1,8 @@
 'use client';
 
-import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import MarketDirectory from '../../components/MarketDirectory';
 import Navbar from '../../components/Navbar';
-import TradingWorkspace from '../../components/TradingWorkspace';
 import marketsData from '../../data/markets.json';
 import { MarketCardData } from '../../lib/types';
 
@@ -19,7 +17,6 @@ const filterLabels: Record<FilterKey, string> = {
 export default function AppPage() {
   const markets = useMemo(() => marketsData as MarketCardData[], []);
   const [filter, setFilter] = useState<FilterKey>('active');
-  const [selectedMarket, setSelectedMarket] = useState<MarketCardData | null>(null);
 
   const filteredMarkets = useMemo(() => {
     return markets.filter((market) => {
@@ -39,41 +36,17 @@ export default function AppPage() {
     [markets]
   );
 
-  useEffect(() => {
-    if (!selectedMarket) {
-      setSelectedMarket(filteredMarkets[0] ?? markets[0]);
-      return;
-    }
-
-    if (filteredMarkets.length && !filteredMarkets.some((market) => market.id === selectedMarket.id)) {
-      setSelectedMarket(filteredMarkets[0]);
-    }
-  }, [filteredMarkets, markets, selectedMarket]);
-
   return (
     <main className="space-y-8 pb-14">
       <Navbar />
 
-      <section id="markets" className="grid gap-6 lg:grid-cols-5 lg:items-start">
-        <div className="lg:col-span-2 space-y-4">
-          <MarketDirectory
-            markets={filteredMarkets}
-            selectedId={selectedMarket?.id ?? -1}
-            onSelect={setSelectedMarket}
-            filter={filter}
-            onFilterChange={setFilter}
-            filterCounts={filterCounts}
-            filterLabels={filterLabels}
-          />
-        </div>
-        <div className="lg:col-span-3">
-          {selectedMarket ? (
-            <TradingWorkspace market={selectedMarket} />
-          ) : (
-            <div className="card p-6 text-slate-600">Select a market to load the trading workspace.</div>
-          )}
-        </div>
-      </section>
+      <MarketDirectory
+        markets={filteredMarkets}
+        filter={filter}
+        onFilterChange={setFilter}
+        filterCounts={filterCounts}
+        filterLabels={filterLabels}
+      />
     </main>
   );
 }

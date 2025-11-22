@@ -5,8 +5,7 @@ type FilterKey = 'active' | 'locked' | 'resolved';
 
 interface Props {
   markets: MarketCardData[];
-  selectedId: number;
-  onSelect: (market: MarketCardData) => void;
+  hrefBuilder?: (market: MarketCardData) => string;
   filter?: FilterKey;
   filterLabels?: Record<FilterKey, string>;
   filterCounts?: Record<FilterKey, number>;
@@ -21,13 +20,14 @@ const filterConfig: { key: FilterKey; label: string }[] = [
 
 export default function MarketDirectory({
   markets,
-  selectedId,
-  onSelect,
+  hrefBuilder,
   filter,
   filterLabels,
   filterCounts,
   onFilterChange
 }: Props) {
+  const buildHref = hrefBuilder ?? ((market: MarketCardData) => `/app/markets/${market.id}`);
+
   return (
     <section id="markets" className="card p-6">
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -58,12 +58,7 @@ export default function MarketDirectory({
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         {markets.map((market) => (
-          <MarketCard
-            key={market.id}
-            market={market}
-            isActive={market.id === selectedId}
-            onSelect={onSelect}
-          />
+          <MarketCard key={market.id} market={market} href={buildHref(market)} />
         ))}
       </div>
       {markets.length === 0 && (
