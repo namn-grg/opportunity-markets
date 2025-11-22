@@ -1,6 +1,7 @@
 [
   {
     "id": 0,
+    "state": "0",
     "marketAddress": "0x1111111111111111111111111111111111111111",
     "questionHash": "0xaaaabbbbccccddddeeeeffff0000111122223333444455556666777788889999",
     "title": "Will we sign Artist Nova before Q4 2025?",
@@ -22,9 +23,10 @@
   },
   {
     "id": 1,
+    "state": "1",
     "marketAddress": "0x2222222222222222222222222222222222222222",
     "questionHash": "0xbbbbccccddddeeeeffff0000111122223333444455556666777788889999aaaa",
-    "title": "Will our lab validate the sapphire protocol add-on?",
+    "title": "Will our lab validate the Sapphire add-on before launch week?",
     "description": "Research scouts stake YES on the lab finishing a Sapphire privacy add-on before launch week.",
     "opportunityWindowEnd": "2025-12-30T00:00:00.000Z",
     "penaltyBps": 300,
@@ -38,6 +40,28 @@
       {
         "label": "Delayed",
         "optionHash": "0x4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "state": "2",
+    "marketAddress": "0x3333333333333333333333333333333333333333",
+    "questionHash": "0xccccddddeeeeffff0000111122223333444455556666777788889999aaaabbbb",
+    "title": "Will the scout collective lock in the Q1 stadium residency?",
+    "description": "A sponsor-backed pool rewarding scouts who predicted the stadium residency terms before the booking window closed.",
+    "opportunityWindowEnd": "2025-11-02T00:00:00.000Z",
+    "penaltyBps": 400,
+    "sponsor": "0x7777777777777777777777777777777777777777",
+    "collateralSymbol": "USDC",
+    "options": [
+      {
+        "label": "Residency confirmed",
+        "optionHash": "0x5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f"
+      },
+      {
+        "label": "No residency",
+        "optionHash": "0x6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f"
       }
     ]
   }

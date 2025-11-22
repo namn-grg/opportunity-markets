@@ -1,11 +1,11 @@
 import Link from 'next/link';
-import Header from '../../components/Header';
+import Navbar from '../../components/Navbar';
 import SponsorWizard from '../../components/SponsorWizard';
 
 export default function SponsorPage() {
   return (
-    <main className="space-y-8">
-      <Header />
+    <main className="space-y-8 pb-14">
+      <Navbar />
       <section className="card p-6 space-y-3 text-slate-700">
         <div>
           <p className="text-sm uppercase tracking-[0.15em] text-slate-500">Sponsor console</p>
@@ -20,7 +20,7 @@ export default function SponsorPage() {
           <li>Each option shares the same initial collateral; adjust the text fields below to represent scout submissions.</li>
         </ul>
         <div className="flex flex-wrap gap-3 pt-2">
-          <Link href="/" className="btn-secondary">
+          <Link href="/app#markets" className="btn-secondary">
             ← Back to markets
           </Link>
         </div>
@@ -29,4 +29,3 @@ export default function SponsorPage() {
     </main>
   );
 }
-
