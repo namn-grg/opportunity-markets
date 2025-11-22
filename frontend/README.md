@@ -1,8 +1,9 @@
 # Opportunity Markets Frontend
 
-A single-page Next.js workspace that mirrors the opportunity-markets article: calm, data-first surfaces for sponsors and scouts to explore markets, trade YES with slippage bounds, and launch new opportunity windows.
+A multi-surface Next.js workspace inspired by Paradigm Research’s [Opportunity Markets](https://www.paradigm.xyz/2025/08/opportunity-markets): calm, data-first surfaces for sponsors and scouts to explore markets, trade YES with slippage bounds, and launch new opportunity windows.
 
 ## Features
+- Landing page that funnels visitors into the app with clear Paradigm credits
 - Wallet connect with wagmi injected connector
 - Market directory backed by static metadata (replace with on-chain reads when ready)
 - Trading workspace with privacy reminders and slippage controls for `buyYes`
