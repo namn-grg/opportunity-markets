@@ -1,8 +1,9 @@
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import Navbar from '../../components/Navbar';
 import SponsorWizard from '../../components/SponsorWizard';
 
-export default function SponsorPage() {
+function SponsorPageContent() {
   return (
     <main className="space-y-8 pb-14">
       <Navbar />
@@ -21,3 +22,5 @@ export default function SponsorPage() {
     </main>
   );
 }
+
+export default dynamic(() => Promise.resolve(SponsorPageContent), { ssr: false });

@@ -22,4 +22,4 @@ export const sapphireTestnet = overrideRpcUrls(
   sapphireTestnetRpc || sapphireTestnetBase.rpcUrls.default.http[0]
 );
 
-export const supportedChains = [sapphireTestnet, sapphire];
+export const supportedChains: [Chain, ...Chain[]] = [sapphireTestnet, sapphire];

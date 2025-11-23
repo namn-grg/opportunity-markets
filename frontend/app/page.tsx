@@ -1,3 +1,4 @@
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import Navbar from '../components/Navbar';
 
@@ -19,7 +20,7 @@ const featureList = [
   }
 ];
 
-export default function LandingPage() {
+function LandingPageContent() {
   return (
     <main className="space-y-10 pb-14">
       <Navbar />
@@ -56,3 +57,5 @@ export default function LandingPage() {
     </main>
   );
 }
+
+export default dynamic(() => Promise.resolve(LandingPageContent), { ssr: false });

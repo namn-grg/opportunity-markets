@@ -1,8 +1,13 @@
 'use client';
 
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
-import { RainbowKitConnectButton } from './RainbowKitConnectButton';
+
+const RainbowKitConnectButton = dynamic(
+  () => import('./RainbowKitConnectButton').then((mod) => mod.RainbowKitConnectButton),
+  { ssr: false }
+);
 
 export default function Navbar() {
   const pathname = usePathname();

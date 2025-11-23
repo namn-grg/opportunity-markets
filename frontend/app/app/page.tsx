@@ -1,5 +1,6 @@
-'use client';
+"use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from 'react';
 import { usePublicClient } from 'wagmi';
 import MarketDirectory from '../../components/MarketDirectory';
@@ -16,7 +17,7 @@ const filterLabels: Record<FilterKey, string> = {
   resolved: 'Resolved'
 };
 
-export default function AppPage() {
+function AppPageContent() {
   const publicClient = usePublicClient();
   const factoryAddress = process.env.NEXT_PUBLIC_FACTORY_ADDRESS as `0x${string}` | undefined;
   const [markets, setMarkets] = useState<MarketCardData[]>([]);
@@ -128,3 +129,5 @@ export default function AppPage() {
     </main>
   );
 }
+
+export default dynamic(() => Promise.resolve(AppPageContent), { ssr: false });

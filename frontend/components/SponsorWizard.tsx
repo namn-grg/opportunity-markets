@@ -62,6 +62,12 @@ export default function SponsorWizard() {
         setTxHash(null);
         return;
       }
+      if (!address) {
+        setStatus('Connect your wallet to create a market.');
+        return;
+      }
+      const sponsorAddress = address as `0x${string}`;
+      const factoryAddr = factoryAddress as `0x${string}`;
       if (!publicClient) {
         setStatus('Public client unavailable. Check your wallet connection.');
         return;
@@ -87,7 +93,7 @@ export default function SponsorWizard() {
         address: collateralToken,
         abi: erc20Abi,
         functionName: 'balanceOf',
-        args: [address]
+        args: [sponsorAddress]
       });
       if (balance < totalInitialCollateral) {
         setStatus(
@@ -100,7 +106,7 @@ export default function SponsorWizard() {
       }
 
       const questionHash = keccak256(stringToBytes(question));
-      const opportunityWindowEnd = windowEnd ? Math.floor(new Date(windowEnd).getTime() / 1000) : 0;
+      const opportunityWindowEndSeconds = windowEnd ? Math.floor(new Date(windowEnd).getTime() / 1000) : 0;
       const options = optionLabels.map((label) => ({
         optionHash: keccak256(stringToBytes(label)),
         initialCollateral: perOptionCollateral,
@@ -111,7 +117,7 @@ export default function SponsorWizard() {
         address: collateralToken,
         abi: erc20Abi,
         functionName: 'allowance',
-        args: [address, factoryAddress]
+        args: [sponsorAddress, factoryAddr]
       });
       if (allowance < totalInitialCollateral) {
         setStatus('Requesting collateral approval...');
@@ -119,7 +125,7 @@ export default function SponsorWizard() {
           address: collateralToken,
           abi: erc20Abi,
           functionName: 'approve',
-          args: [factoryAddress, totalInitialCollateral],
+          args: [factoryAddr, totalInitialCollateral],
           chainId: sapphireTestnet.id
         });
         await publicClient.waitForTransactionReceipt({ hash: approvalHash });
@@ -129,16 +135,16 @@ export default function SponsorWizard() {
       }
 
       const hash = await writeContractAsync({
-        address: factoryAddress,
+        address: factoryAddr,
         abi: opportunityFactoryAbi,
         functionName: 'createMarket',
         chainId: sapphireTestnet.id,
         args: [
           {
-            sponsor: address as `0x${string}`,
+            sponsor: sponsorAddress,
             collateralToken: collateralToken as `0x${string}`,
             penaltyBps,
-            opportunityWindowEnd,
+            opportunityWindowEnd: BigInt(opportunityWindowEndSeconds),
             questionHash,
             options
           }
@@ -149,7 +155,7 @@ export default function SponsorWizard() {
 
       if (publicClient) {
         const receipt = await publicClient.waitForTransactionReceipt({ hash });
-        const marketCreatedLog = receipt.logs.find((log) => log.address.toLowerCase() === factoryAddress.toLowerCase());
+        const marketCreatedLog = receipt.logs.find((log) => log.address.toLowerCase() === factoryAddr.toLowerCase());
         if (marketCreatedLog) {
           const decoded = decodeEventLog({
             abi: opportunityFactoryAbi,
