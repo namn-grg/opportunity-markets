@@ -1,43 +1,38 @@
 'use client';
 
+import '@rainbow-me/rainbowkit/styles.css';
+
+import type { ReactNode } from 'react';
+import { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { WagmiConfig, configureChains, createConfig } from 'wagmi';
-import { InjectedConnector } from 'wagmi/connectors/injected';
-import { jsonRpcProvider } from 'wagmi/providers/jsonRpc';
-import { sapphireTestnet } from '../lib/chains';
+import { WagmiProvider } from 'wagmi';
+import { getDefaultConfig } from '@rainbow-me/rainbowkit';
+import { http } from 'viem';
+import { supportedChains } from '../lib/chains';
+import { getWalletConnectProjectId } from '../lib/env';
+import { RainbowKitProviderWithAuth } from '../components/RainbowKitProviderWithAuth';
 
-const rpcUrl = process.env.NEXT_PUBLIC_SAPPHIRE_RPC || sapphireTestnet.rpcUrls.default.http[0];
+const transports = supportedChains.reduce<Record<number, ReturnType<typeof http>>>((map, chain) => {
+  map[chain.id] = http(chain.rpcUrls.default.http[0]);
+  return map;
+}, {});
 
-const queryClient = new QueryClient();
-
-const { chains, publicClient, webSocketPublicClient } = configureChains(
-  [sapphireTestnet],
-  [
-    jsonRpcProvider({
-      rpc: () => ({
-        http: rpcUrl
-      })
-    })
-  ]
-);
-
-const wagmiConfig = createConfig({
-  autoConnect: true,
-  connectors: [
-    new InjectedConnector({
-      chains,
-      options: { shimDisconnect: true }
-    })
-  ],
-  publicClient,
-  webSocketPublicClient,
-  queryClient
+const wagmiConfig = getDefaultConfig({
+  appName: 'Opportunity Markets',
+  projectId: getWalletConnectProjectId(),
+  chains: supportedChains,
+  transports,
+  ssr: true
 });
 
-export default function Providers({ children }: { children: React.ReactNode }) {
+export default function Providers({ children }: { children: ReactNode }) {
+  const [queryClient] = useState(() => new QueryClient());
+
   return (
     <QueryClientProvider client={queryClient}>
-      <WagmiConfig config={wagmiConfig}>{children}</WagmiConfig>
+      <WagmiProvider config={wagmiConfig}>
+        <RainbowKitProviderWithAuth>{children}</RainbowKitProviderWithAuth>
+      </WagmiProvider>
     </QueryClientProvider>
   );
 }

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import WalletButton from './WalletButton';
+import { RainbowKitConnectButton } from './RainbowKitConnectButton';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -25,7 +25,7 @@ export default function Navbar() {
             </Link>
           </div>
         </div>
-        <WalletButton />
+        <RainbowKitConnectButton />
       </div>
     </nav>
   );

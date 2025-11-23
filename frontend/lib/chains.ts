@@ -1,17 +1,25 @@
-import { defineChain } from 'viem';
+import type { Chain } from 'viem';
+import { sapphire as sapphireMainnet, sapphireTestnet as sapphireTestnetBase } from 'viem/chains';
 
-const defaultRpcUrl = process.env.NEXT_PUBLIC_SAPPHIRE_RPC || 'https://testnet.sapphire.oasis.dev';
-
-export const sapphireTestnet = defineChain({
-  id: 0x5afe,
-  name: 'Oasis Sapphire Testnet',
-  network: 'sapphire-testnet',
-  nativeCurrency: { name: 'Sapphire ROSE', symbol: 'ROSE', decimals: 18 },
+const overrideRpcUrls = (chain: Chain, rpcUrl?: string): Chain => {
+  if (!rpcUrl) return chain;
+  return {
+    ...chain,
   rpcUrls: {
-    default: { http: [defaultRpcUrl] },
-    public: { http: [defaultRpcUrl] }
-  },
-  blockExplorers: {
-    default: { name: 'Blockscout', url: 'https://testnet.explorer.sapphire.oasis.dev' }
-  }
-});
+      ...chain.rpcUrls,
+      default: { http: [rpcUrl] },
+      public: { http: [rpcUrl] }
+    }
+  };
+};
+
+const sapphireMainnetRpc = process.env.NEXT_PUBLIC_SAPPHIRE_MAINNET_RPC;
+const sapphireTestnetRpc = process.env.NEXT_PUBLIC_SAPPHIRE_RPC;
+
+export const sapphire = overrideRpcUrls(sapphireMainnet, sapphireMainnetRpc);
+export const sapphireTestnet = overrideRpcUrls(
+  sapphireTestnetBase,
+  sapphireTestnetRpc || sapphireTestnetBase.rpcUrls.default.http[0]
+);
+
+export const supportedChains = [sapphireTestnet, sapphire];

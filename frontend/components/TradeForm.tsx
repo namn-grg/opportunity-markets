@@ -2,7 +2,7 @@
 
 import { FormEvent, useMemo, useState } from 'react';
 import { parseUnits } from 'viem';
-import { useAccount, useContractWrite } from 'wagmi';
+import { useAccount, useWriteContract } from 'wagmi';
 import { opportunityMarketAbi } from '../lib/contracts';
 import { MarketMetadata } from '../lib/types';
 
@@ -17,12 +17,7 @@ export default function TradeForm({ market }: Props) {
   const [maxPrice, setMaxPrice] = useState('0.65');
   const [minYesOut, setMinYesOut] = useState('100');
   const [status, setStatus] = useState('');
-  const { writeAsync, isLoading } = useContractWrite({
-    address: market.marketAddress,
-    abi: opportunityMarketAbi,
-    functionName: 'buyYes',
-    mode: 'recklesslyUnprepared'
-  });
+  const { writeContractAsync, isPending } = useWriteContract();
 
   const optionLabels = useMemo(() => market.options.map((opt) => opt.label), [market.options]);
 
@@ -33,12 +28,11 @@ export default function TradeForm({ market }: Props) {
       return;
     }
     try {
-      if (!writeAsync) {
-        setStatus('Wallet client not ready. Reconnect and try again.');
-        return;
-      }
       setStatus('Preparing transaction...');
-      await writeAsync({
+      await writeContractAsync({
+        address: market.marketAddress,
+        abi: opportunityMarketAbi,
+        functionName: 'buyYes',
         args: [
           BigInt(selectedOption),
           parseUnits(collateralIn || '0', 18),
@@ -118,8 +112,8 @@ export default function TradeForm({ market }: Props) {
         </label>
       </div>
       <div className="mt-4 flex flex-col gap-2">
-        <button type="submit" className="btn-primary" disabled={isLoading || !writeAsync}>
-          {isLoading ? 'Submitting...' : 'Submit trade'}
+        <button type="submit" className="btn-primary" disabled={isPending}>
+          {isPending ? 'Submitting...' : 'Submit trade'}
         </button>
         <p className="text-xs text-slate-500">
           Settlement occurs after the opportunity window closes. Claims become available once the sponsor resolves. Refund math for
