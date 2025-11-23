@@ -4,7 +4,7 @@ This repository now ships with the files necessary to package the Opportunity Ma
 
 ## 1. Prerequisites
 
-1. **Container-ready app** – the `frontend` workspace builds into a production-ready Next.js server using the provided `frontend/Dockerfile`.
+1. **Container-ready app** – the `frontend` workspace builds into a production-ready Next.js server using the provided `frontend/Dockerfile` (Yarn-based build).
 2. **Oasis CLI** – download and install the latest release.
 3. **Funded wallet** – create or import an account with ~150 testnet tokens:
 
@@ -21,7 +21,7 @@ Populate the values required by the app by copying `env.sample` to `.env` in the
 cp env.sample .env
 ```
 
-Update the two variables with your preferred Sapphire RPC endpoint and the deployed factory address. These variables are injected during the Docker build and at runtime so they will also need to be provided as ROFL secrets (see step 4).
+Update the values as needed. For ROFL demo runs, keep `NEXT_PUBLIC_DEMO_MODE=true` and you can leave `NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID` empty. The RPC and factory values are injected during the Docker build and at runtime, so they need to be provided as ROFL secrets (see step 4).
 
 ## 3. Build the ROFL bundle
 
@@ -40,8 +40,10 @@ The build step creates a `.orc` bundle using the Docker image defined in `compos
 Store your public runtime values inside the ROFL KMS so they stay private on-chain:
 
 ```bash
-echo -n "https://testnet.sapphire.oasis.dev" | oasis rofl secret set NEXT_PUBLIC_SAPPHIRE_RPC -
+echo -n "https://testnet.sapphire.oasis.io" | oasis rofl secret set NEXT_PUBLIC_SAPPHIRE_RPC -
 echo -n "0xYourFactoryAddress" | oasis rofl secret set NEXT_PUBLIC_FACTORY_ADDRESS -
+# Optional: set additional public vars if you override defaults in .env
+# echo -n "true" | oasis rofl secret set NEXT_PUBLIC_DEMO_MODE -
 ```
 
 Apply the bundle metadata and secrets on-chain:
@@ -70,4 +72,3 @@ When the machine is healthy, the Next.js server will be reachable on the exposed
 - `rofl.yaml` – manifest describing TEE resources and artifacts for Sapphire deployments.
 
 Adapt CPU, memory, storage, and artifact versions as your workload evolves.
-
