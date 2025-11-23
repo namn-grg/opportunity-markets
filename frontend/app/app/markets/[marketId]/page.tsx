@@ -1,9 +1,12 @@
+'use client';
+
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import Navbar from '../../../../components/Navbar';
 import TradingWorkspace from '../../../../components/TradingWorkspace';
 import marketsData from '../../../../data/markets.json';
-import { MarketCardData } from '../../../../lib/types';
+import { getDemoMarket } from '../../../../lib/demoState';
+import { DemoMarket, MarketCardData } from '../../../../lib/types';
 
 interface MarketPageProps {
   params: {
@@ -13,11 +16,39 @@ interface MarketPageProps {
 
 export default function MarketDetailPage({ params }: MarketPageProps) {
   const marketId = Number(params.marketId);
-  const markets = marketsData as MarketCardData[];
-  const market = markets.find((entry) => entry.id === marketId);
+  const [market, setMarket] = useState<DemoMarket | null>(null);
+
+  useEffect(() => {
+    const stored = getDemoMarket(marketId);
+    if (stored) {
+      setMarket(stored);
+      return;
+    }
+    const fallback = (marketsData as MarketCardData[]).find((entry) => entry.id === marketId);
+    if (fallback) {
+      setMarket({
+        ...fallback,
+        state: fallback.state ?? '0',
+        bids: [],
+        lockedAt: null,
+        winningOptionId: null,
+        sponsorPayout: null
+      });
+    }
+  }, [marketId]);
 
   if (!market) {
-    notFound();
+    return (
+      <main className="space-y-8 pb-14">
+        <Navbar />
+        <section className="card space-y-3 p-6">
+          <Link href="/app#markets" className="text-sm text-ocean hover:underline">
+            ← Back to markets
+          </Link>
+          <p className="text-sm text-slate-600">We could not find that market. Please reload and try again.</p>
+        </section>
+      </main>
+    );
   }
 
   return (
@@ -33,8 +64,7 @@ export default function MarketDetailPage({ params }: MarketPageProps) {
           <p className="text-sm text-slate-600">{market.description}</p>
         </div>
       </section>
-      <TradingWorkspace market={market} />
+      <TradingWorkspace market={market} onMarketUpdate={setMarket} />
     </main>
   );
 }
-

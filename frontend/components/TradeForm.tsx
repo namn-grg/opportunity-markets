@@ -3,8 +3,9 @@
 import { FormEvent, useMemo, useState } from 'react';
 import { parseUnits } from 'viem';
 import { useAccount, useWriteContract } from 'wagmi';
+import { demoModeEnabled, recordDemoBid } from '../lib/demoState';
 import { opportunityMarketAbi } from '../lib/contracts';
-import { MarketMetadata } from '../lib/types';
+import { DemoMarket } from '../lib/types';
 
 const erc20Abi = [
   {
@@ -20,10 +21,11 @@ const erc20Abi = [
 ] as const;
 
 interface Props {
-  market: MarketMetadata;
+  market: DemoMarket;
+  onMarketUpdate?: (market: DemoMarket) => void;
 }
 
-export default function TradeForm({ market }: Props) {
+export default function TradeForm({ market, onMarketUpdate }: Props) {
   const { address, isConnected } = useAccount();
   const [selectedOption, setSelectedOption] = useState(0);
   const [collateralIn, setCollateralIn] = useState('100');
@@ -32,10 +34,15 @@ export default function TradeForm({ market }: Props) {
   const [status, setStatus] = useState('');
   const [isApproving, setIsApproving] = useState(false);
   const { writeContractAsync, isPending } = useWriteContract();
+  const isDemo = demoModeEnabled;
 
   const optionLabels = useMemo(() => market.options.map((opt) => opt.label), [market.options]);
 
   const handleApprove = async () => {
+    if (isDemo) {
+      setStatus('Allowance already handled for this market. You can submit the trade directly.');
+      return;
+    }
     if (!isConnected) {
       setStatus('Connect a wallet before approving collateral.');
       return;
@@ -63,6 +70,33 @@ export default function TradeForm({ market }: Props) {
 
   const handleSubmit = async (evt: FormEvent) => {
     evt.preventDefault();
+    if (isDemo) {
+      const collateralAmount = Number(collateralIn || '0');
+      if (!Number.isFinite(collateralAmount) || collateralAmount <= 0) {
+        setStatus('Enter a positive collateral amount to submit the trade.');
+        return;
+      }
+      const parsedMaxPrice = Number(maxPrice || '0.65');
+      const updated = recordDemoBid({
+        marketId: market.id,
+        trader: address ?? undefined,
+        optionId: selectedOption,
+        collateralIn: collateralAmount,
+        maxPrice: Number.isFinite(parsedMaxPrice) ? parsedMaxPrice : 0.65
+      });
+      if (updated) {
+        onMarketUpdate?.(updated);
+        const placed = updated.bids[0];
+        setStatus(
+          `Trade submitted: ${placed.collateralIn.toFixed(2)} ${market.collateralSymbol} -> ${placed.yesOut.toFixed(
+            2
+          )} YES on ${placed.optionLabel}.`
+        );
+      } else {
+        setStatus('Unable to record the trade.');
+      }
+      return;
+    }
     if (!isConnected) {
       setStatus('Connect a wallet to submit the trade.');
       return;
@@ -93,7 +127,9 @@ export default function TradeForm({ market }: Props) {
           <p className="text-sm uppercase tracking-[0.15em] text-slate-500">Trade YES</p>
           <h4 className="text-lg font-semibold text-midnight">Blind fill with slippage guardrails</h4>
         </div>
-        <div className="text-xs text-slate-500">Sponsor cannot trade this market; fills are private.</div>
+        <div className="text-xs text-slate-500">
+          {isDemo ? 'Allowance and fills are pre-authorized for this market.' : 'Sponsor cannot trade this market; fills are private.'}
+        </div>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <label className="space-y-2 text-sm font-medium text-slate-700">
@@ -161,12 +197,12 @@ export default function TradeForm({ market }: Props) {
           </button>
         </div>
         <p className="text-xs text-slate-500">
-          You must approve the market contract to spend your collateral before trading. Settlement occurs after the opportunity
-          window closes. Claims become available once the sponsor resolves. Refund math for NO: stake - penalty ({market.penaltyBps /
-          100}%).
+          {isDemo
+            ? 'This market is pre-authorized. Submit a bid, lock the market, resolve, and release payouts to show the full flow.'
+            : `You must approve the market contract to spend your collateral before trading. Settlement occurs after the opportunity window closes. Claims become available once the sponsor resolves. Refund math for NO: stake - penalty (${market.penaltyBps / 100}%).`}
         </p>
         {status && <p className="text-sm text-ocean">{status}</p>}
-        {!isConnected && <p className="text-sm text-slate-600">Connect your wallet to place a trade.</p>}
+        {!isConnected && !isDemo && <p className="text-sm text-slate-600">Connect your wallet to place a trade.</p>}
         {address && (
           <p className="text-xs text-slate-500">Trades are tied to {address.slice(0, 6)}...{address.slice(-4)}.</p>
         )}

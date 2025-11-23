@@ -2,14 +2,14 @@
   {
     "id": 0,
     "state": "0",
-    "marketAddress": "0x1111111111111111111111111111111111111111",
+    "marketAddress": "0x7ea5bc0f4b8dcf3bc28ce5bf7baf1c0ff5da8c10",
     "questionHash": "0xaaaabbbbccccddddeeeeffff0000111122223333444455556666777788889999",
     "title": "Will we sign Artist Nova before Q4 2025?",
     "description": "Sponsor offers a two-week confidential book for scouts wagering on a 2025 label deal with Artist Nova.",
     "opportunityWindowEnd": "2025-12-15T00:00:00.000Z",
     "penaltyBps": 500,
-    "sponsor": "0x9999999999999999999999999999999999999999",
-    "collateralAddress": "0x0000000000000000000000000000000000000001",
+    "sponsor": "0x3f9d4c7734975fa21390d2e0e675985d8c5d6f21",
+    "collateralAddress": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
     "collateralSymbol": "USDC",
     "options": [
       {
@@ -25,14 +25,14 @@
   {
     "id": 1,
     "state": "1",
-    "marketAddress": "0x2222222222222222222222222222222222222222",
+    "marketAddress": "0x59c0adbf3e0d0949d8c798c9e79212a7f6fbdfa6",
     "questionHash": "0xbbbbccccddddeeeeffff0000111122223333444455556666777788889999aaaa",
     "title": "Will our lab validate the Sapphire add-on before launch week?",
     "description": "Research scouts stake YES on the lab finishing a Sapphire privacy add-on before launch week.",
     "opportunityWindowEnd": "2025-12-30T00:00:00.000Z",
     "penaltyBps": 300,
-    "sponsor": "0x8888888888888888888888888888888888888888",
-    "collateralAddress": "0x0000000000000000000000000000000000000002",
+    "sponsor": "0x1f2e35d4e8b98c17a2a9130cbb71d1f6a1f0236c",
+    "collateralAddress": "0xdac17f958d2ee523a2206206994597c13d831ec7",
     "collateralSymbol": "USDT",
     "options": [
       {
@@ -48,14 +48,14 @@
   {
     "id": 2,
     "state": "2",
-    "marketAddress": "0x3333333333333333333333333333333333333333",
+    "marketAddress": "0xb8c77482e45f1f44de1745f52c74426c631bdd52",
     "questionHash": "0xccccddddeeeeffff0000111122223333444455556666777788889999aaaabbbb",
     "title": "Will the scout collective lock in the Q1 stadium residency?",
     "description": "A sponsor-backed pool rewarding scouts who predicted the stadium residency terms before the booking window closed.",
     "opportunityWindowEnd": "2025-11-02T00:00:00.000Z",
     "penaltyBps": 400,
-    "sponsor": "0x7777777777777777777777777777777777777777",
-    "collateralAddress": "0x0000000000000000000000000000000000000003",
+    "sponsor": "0x8ba1f109551bd432803012645ac136ddd64dba72",
+    "collateralAddress": "0x5f98805a4e8be255a32880fdec7f6728c6568ba0",
     "collateralSymbol": "USDC",
     "options": [
       {

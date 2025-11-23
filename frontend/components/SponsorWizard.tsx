@@ -1,12 +1,16 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
-import { keccak256, stringToBytes, parseUnits } from 'viem';
-import { useAccount, useWriteContract } from 'wagmi';
+import { decodeEventLog, keccak256, stringToBytes, parseUnits, erc20Abi, formatUnits } from 'viem';
+import { useAccount, usePublicClient, useWriteContract } from 'wagmi';
+import { createDemoMarket, demoModeEnabled } from '../lib/demoState';
 import { opportunityFactoryAbi } from '../lib/contracts';
 import { sapphireTestnet } from '../lib/chains';
 
 const defaultQuestion = 'Which scout submission should the lab back this month?';
+const defaultCollateral =
+  (process.env.NEXT_PUBLIC_COLLATERAL_TOKEN as `0x${string}` | undefined) ??
+  '0x0000000000000000000000000000000000000000';
 
 export default function SponsorWizard() {
   const { address } = useAccount();
@@ -14,39 +18,117 @@ export default function SponsorWizard() {
   const [question, setQuestion] = useState(defaultQuestion);
   const [penaltyBps, setPenaltyBps] = useState(500);
   const [windowEnd, setWindowEnd] = useState('');
-  const [collateralToken, setCollateralToken] = useState('0x0000000000000000000000000000000000000000');
+  const [collateralToken, setCollateralToken] = useState<`0x${string}`>(defaultCollateral);
   const [optionLabels, setOptionLabels] = useState(['Artist A', 'Artist B']);
   const [initialCollateral, setInitialCollateral] = useState('1000');
   const [status, setStatus] = useState('');
+  const [txHash, setTxHash] = useState<`0x${string}` | null>(null);
+  const [createdMarket, setCreatedMarket] = useState<`0x${string}` | null>(null);
+  const publicClient = usePublicClient();
+  const isDemo = demoModeEnabled;
 
   const handleAddOption = () => setOptionLabels((opts) => [...opts, `Option ${opts.length + 1}`]);
 
   const handleSubmit = async (evt: FormEvent) => {
     evt.preventDefault();
-    if (!address) {
+    if (!address && !isDemo) {
       setStatus('Connect your wallet to create a market.');
       return;
     }
     const factoryAddress = process.env.NEXT_PUBLIC_FACTORY_ADDRESS as `0x${string}` | undefined;
-    if (!factoryAddress) {
+    if (!factoryAddress && !isDemo) {
       setStatus('Factory address missing. Set NEXT_PUBLIC_FACTORY_ADDRESS.');
       return;
     }
-    if (collateralToken === '0x0000000000000000000000000000000000000000') {
+    if (collateralToken === '0x0000000000000000000000000000000000000000' && !isDemo) {
       setStatus('Enter a collateral token address before deploying.');
       return;
     }
-    setStatus('Preparing deployment...');
+    setStatus(isDemo ? 'Creating market...' : 'Preparing deployment...');
     try {
+      if (isDemo) {
+        const market = createDemoMarket({
+          question,
+          penaltyBps,
+          windowEnd,
+          collateralToken,
+          optionLabels,
+          initialCollateral,
+          sponsor: address ?? null,
+          collateralSymbol: 'USDC'
+        });
+        setCreatedMarket(market.marketAddress);
+        setStatus('Market created. Head to the App page to trade, resolve, and claim payouts.');
+        setTxHash(null);
+        return;
+      }
+      if (!publicClient) {
+        setStatus('Public client unavailable. Check your wallet connection.');
+        return;
+      }
+      setStatus('Fetching token decimals...');
+      const decimals = Number(
+        await publicClient.readContract({
+          address: collateralToken,
+          abi: erc20Abi,
+          functionName: 'decimals'
+        })
+      );
+      const perOptionCollateral = parseUnits(initialCollateral || '0', decimals);
+      const perOptionVirtualYes = perOptionCollateral / BigInt(Math.max(optionLabels.length, 1));
+      if (perOptionCollateral === 0n || perOptionVirtualYes === 0n) {
+        setStatus('Initial collateral too low for selected token decimals.');
+        return;
+      }
+      const totalInitialCollateral = perOptionCollateral * BigInt(optionLabels.length);
+
+      setStatus('Checking balance...');
+      const balance = await publicClient.readContract({
+        address: collateralToken,
+        abi: erc20Abi,
+        functionName: 'balanceOf',
+        args: [address]
+      });
+      if (balance < totalInitialCollateral) {
+        setStatus(
+          `Insufficient collateral. Need ${formatUnits(totalInitialCollateral, decimals)}, balance ${formatUnits(
+            balance,
+            decimals
+          )}.`
+        );
+        return;
+      }
+
       const questionHash = keccak256(stringToBytes(question));
       const opportunityWindowEnd = windowEnd ? Math.floor(new Date(windowEnd).getTime() / 1000) : 0;
       const options = optionLabels.map((label) => ({
         optionHash: keccak256(stringToBytes(label)),
-        initialCollateral: parseUnits(initialCollateral || '0', 18),
-        initialVirtualYes: parseUnits((Number(initialCollateral || '0') / optionLabels.length).toString(), 18)
+        initialCollateral: perOptionCollateral,
+        initialVirtualYes: perOptionVirtualYes
       }));
+      setStatus('Checking allowance...');
+      const allowance = await publicClient.readContract({
+        address: collateralToken,
+        abi: erc20Abi,
+        functionName: 'allowance',
+        args: [address, factoryAddress]
+      });
+      if (allowance < totalInitialCollateral) {
+        setStatus('Requesting collateral approval...');
+        const approvalHash = await writeContractAsync({
+          address: collateralToken,
+          abi: erc20Abi,
+          functionName: 'approve',
+          args: [factoryAddress, totalInitialCollateral],
+          chainId: sapphireTestnet.id
+        });
+        await publicClient.waitForTransactionReceipt({ hash: approvalHash });
+        setStatus('Allowance granted. Deploying market...');
+      } else {
+        setStatus('Allowance sufficient. Deploying market...');
+      }
 
-      await writeContractAsync({
+      const hash = await writeContractAsync({
         address: factoryAddress,
         abi: opportunityFactoryAbi,
         functionName: 'createMarket',
@@ -62,7 +144,27 @@ export default function SponsorWizard() {
           }
         ]
       });
-      setStatus('Market created. Copy the address from your wallet receipt and share it with scouts.');
+      setTxHash(hash);
+      setStatus('Waiting for confirmation...');
+
+      if (publicClient) {
+        const receipt = await publicClient.waitForTransactionReceipt({ hash });
+        const marketCreatedLog = receipt.logs.find((log) => log.address.toLowerCase() === factoryAddress.toLowerCase());
+        if (marketCreatedLog) {
+          const decoded = decodeEventLog({
+            abi: opportunityFactoryAbi,
+            data: marketCreatedLog.data,
+            topics: marketCreatedLog.topics
+          });
+          const marketAddr = (decoded.args as { market: `0x${string}` }).market;
+          setCreatedMarket(marketAddr);
+          setStatus('Market created and confirmed on-chain.');
+        } else {
+          setStatus('Transaction confirmed. Check explorer for details.');
+        }
+      } else {
+        setStatus('Transaction sent. Check explorer for confirmation.');
+      }
     } catch (error: unknown) {
       setStatus(`Unable to create market: ${String(error)}`);
     }
@@ -95,12 +197,11 @@ export default function SponsorWizard() {
               <input
                 type="number"
                 min="0"
-                max="3000"
                 value={penaltyBps}
                 onChange={(e) => setPenaltyBps(Number(e.target.value))}
                 className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2"
               />
-              <p className="text-xs font-normal text-slate-500">0-30% suggested per the article.</p>
+              <p className="text-xs font-normal text-slate-500">eg: 20%</p>
             </label>
             <label className="space-y-2 text-sm font-medium text-slate-700">
               Opportunity window end
@@ -120,6 +221,7 @@ export default function SponsorWizard() {
                 onChange={(e) => setCollateralToken(e.target.value as `0x${string}`)}
                 className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2"
               />
+              <p className="text-xs font-normal text-slate-500">Default: USDC token</p>
             </label>
             <label className="space-y-2 text-sm font-medium text-slate-700">
               Initial collateral per option
@@ -167,6 +269,16 @@ export default function SponsorWizard() {
           {isPending ? 'Deploying...' : 'Create market'}
         </button>
         {status && <p className="text-sm text-ocean">{status}</p>}
+        {txHash && (
+          <p className="text-xs text-slate-600">
+            Tx: <a className="text-ocean underline" href={`${sapphireTestnet.blockExplorers?.default.url}/tx/${txHash}`} target="_blank" rel="noreferrer">{txHash}</a>
+          </p>
+        )}
+        {createdMarket && (
+          <p className="text-sm text-midnight">
+            Market address: <span className="font-mono">{createdMarket}</span>
+          </p>
+        )}
       </form>
     </section>
   );

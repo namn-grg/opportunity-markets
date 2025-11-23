@@ -1,5 +1,16 @@
 export const opportunityFactoryAbi = [
   {
+    type: 'event',
+    name: 'MarketCreated',
+    inputs: [
+      { name: 'marketId', type: 'uint256', indexed: true },
+      { name: 'market', type: 'address', indexed: true },
+      { name: 'sponsor', type: 'address', indexed: true },
+      { name: 'questionHash', type: 'bytes32', indexed: false }
+    ],
+    anonymous: false
+  },
+  {
     type: 'function',
     name: 'marketsLength',
     stateMutability: 'view',

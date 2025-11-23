@@ -8,8 +8,8 @@ export default function Hero() {
           <h2 className="text-2xl font-semibold text-midnight">A calm cockpit for opaque markets</h2>
           <p className="text-slate-700">
             Scouts submit conviction without leaking price. Sponsors seed liquidity, choose a penalty policy, and resolve once the
-            opportunity window lapses. Everything you need to run the hackathon demo lives here: connect a wallet, explore
-            markets, trade YES with slippage bounds, and spin up new markets with a guided wizard.
+            opportunity window lapses. Everything you need to run the walkthrough lives here: connect a wallet, explore markets,
+            trade YES with slippage bounds, and spin up new markets with a guided wizard.
           </p>
           <p className="text-sm text-slate-500">
             Pricing is deliberately dark: reserves are hidden on Sapphire and fills only finalize when the window closes. The UI
@@ -26,7 +26,7 @@ export default function Hero() {
         </div>
         <div className="flex flex-col gap-2 text-sm text-slate-600">
           <div className="rounded-lg bg-slate-100 px-4 py-3">
-            <p className="font-semibold text-midnight">Demo checklist</p>
+            <p className="font-semibold text-midnight">Runbook</p>
             <ol className="list-decimal pl-4">
               <li>Sponsor: create a market with initial collateral</li>
               <li>Trader: buy YES with a max price set</li>
