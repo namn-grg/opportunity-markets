@@ -6,6 +6,19 @@ import { useAccount, useWriteContract } from 'wagmi';
 import { opportunityMarketAbi } from '../lib/contracts';
 import { MarketMetadata } from '../lib/types';
 
+const erc20Abi = [
+  {
+    type: 'function',
+    name: 'approve',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'spender', type: 'address' },
+      { name: 'amount', type: 'uint256' }
+    ],
+    outputs: [{ name: 'success', type: 'bool' }]
+  }
+] as const;
+
 interface Props {
   market: MarketMetadata;
 }
@@ -17,9 +30,36 @@ export default function TradeForm({ market }: Props) {
   const [maxPrice, setMaxPrice] = useState('0.65');
   const [minYesOut, setMinYesOut] = useState('100');
   const [status, setStatus] = useState('');
+  const [isApproving, setIsApproving] = useState(false);
   const { writeContractAsync, isPending } = useWriteContract();
 
   const optionLabels = useMemo(() => market.options.map((opt) => opt.label), [market.options]);
+
+  const handleApprove = async () => {
+    if (!isConnected) {
+      setStatus('Connect a wallet before approving collateral.');
+      return;
+    }
+    if (!market.collateralAddress) {
+      setStatus('Collateral token address missing for this market.');
+      return;
+    }
+    try {
+      setIsApproving(true);
+      setStatus('Sending approval for collateral spend...');
+      await writeContractAsync({
+        address: market.collateralAddress,
+        abi: erc20Abi,
+        functionName: 'approve',
+        args: [market.marketAddress, parseUnits(collateralIn || '0', 18)]
+      });
+      setStatus('Approval submitted. You can now submit the trade.');
+    } catch (error: unknown) {
+      setStatus(`Approval failed: ${String(error)}`);
+    } finally {
+      setIsApproving(false);
+    }
+  };
 
   const handleSubmit = async (evt: FormEvent) => {
     evt.preventDefault();
@@ -112,12 +152,18 @@ export default function TradeForm({ market }: Props) {
         </label>
       </div>
       <div className="mt-4 flex flex-col gap-2">
-        <button type="submit" className="btn-primary" disabled={isPending}>
-          {isPending ? 'Submitting...' : 'Submit trade'}
-        </button>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <button type="button" className="btn-secondary" disabled={isApproving || isPending} onClick={handleApprove}>
+            {isApproving ? 'Approving...' : 'Approve collateral'}
+          </button>
+          <button type="submit" className="btn-primary" disabled={isPending || isApproving}>
+            {isPending ? 'Submitting...' : 'Submit trade'}
+          </button>
+        </div>
         <p className="text-xs text-slate-500">
-          Settlement occurs after the opportunity window closes. Claims become available once the sponsor resolves. Refund math for
-          NO: stake - penalty ({market.penaltyBps / 100}%).
+          You must approve the market contract to spend your collateral before trading. Settlement occurs after the opportunity
+          window closes. Claims become available once the sponsor resolves. Refund math for NO: stake - penalty ({market.penaltyBps /
+          100}%).
         </p>
         {status && <p className="text-sm text-ocean">{status}</p>}
         {!isConnected && <p className="text-sm text-slate-600">Connect your wallet to place a trade.</p>}

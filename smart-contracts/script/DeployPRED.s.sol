@@ -13,7 +13,7 @@ contract DeployPRED is Script {
         PREDToken token = new PREDToken();
         vm.stopBroadcast();
 
-        console2.log("PREDToken deployed at", address(token));
+        console2.log("USDC (demo) token deployed at", address(token));
         console2.log("Initial supply", token.totalSupply());
     }
 }

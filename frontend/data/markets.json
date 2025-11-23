@@ -9,6 +9,7 @@
     "opportunityWindowEnd": "2025-12-15T00:00:00.000Z",
     "penaltyBps": 500,
     "sponsor": "0x9999999999999999999999999999999999999999",
+    "collateralAddress": "0x0000000000000000000000000000000000000001",
     "collateralSymbol": "USDC",
     "options": [
       {
@@ -31,6 +32,7 @@
     "opportunityWindowEnd": "2025-12-30T00:00:00.000Z",
     "penaltyBps": 300,
     "sponsor": "0x8888888888888888888888888888888888888888",
+    "collateralAddress": "0x0000000000000000000000000000000000000002",
     "collateralSymbol": "USDT",
     "options": [
       {
@@ -53,6 +55,7 @@
     "opportunityWindowEnd": "2025-11-02T00:00:00.000Z",
     "penaltyBps": 400,
     "sponsor": "0x7777777777777777777777777777777777777777",
+    "collateralAddress": "0x0000000000000000000000000000000000000003",
     "collateralSymbol": "USDC",
     "options": [
       {

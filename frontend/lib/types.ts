@@ -13,6 +13,7 @@ export type MarketMetadata = {
   penaltyBps: number;
   sponsor: `0x${string}`;
   collateralSymbol: string;
+  collateralAddress: `0x${string}`;
   options: OptionMetadata[];
 };
 

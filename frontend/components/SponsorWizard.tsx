@@ -23,6 +23,19 @@ export default function SponsorWizard() {
 
   const handleSubmit = async (evt: FormEvent) => {
     evt.preventDefault();
+    if (!address) {
+      setStatus('Connect your wallet to create a market.');
+      return;
+    }
+    const factoryAddress = process.env.NEXT_PUBLIC_FACTORY_ADDRESS as `0x${string}` | undefined;
+    if (!factoryAddress) {
+      setStatus('Factory address missing. Set NEXT_PUBLIC_FACTORY_ADDRESS.');
+      return;
+    }
+    if (collateralToken === '0x0000000000000000000000000000000000000000') {
+      setStatus('Enter a collateral token address before deploying.');
+      return;
+    }
     setStatus('Preparing deployment...');
     try {
       const questionHash = keccak256(stringToBytes(question));
@@ -34,7 +47,7 @@ export default function SponsorWizard() {
       }));
 
       await writeContractAsync({
-        address: process.env.NEXT_PUBLIC_FACTORY_ADDRESS as `0x${string}`,
+        address: factoryAddress,
         abi: opportunityFactoryAbi,
         functionName: 'createMarket',
         chainId: sapphireTestnet.id,
