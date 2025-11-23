@@ -4,7 +4,7 @@
       "hash": "0x589d805deeca256ea1852a09f4a4ffc8be1d5a27547078b4a47ea7782aab6220",
       "transactionType": "CREATE",
       "contractName": "OpportunityFactory",
-      "contractAddress": "0xc3df085eb9a31659e825643b763fc1f1e9fc950c",
+      "contractAddress": "0xdd6aDCF3b0Bf184B1b1A6858694A034D08D47efc",
       "function": null,
       "arguments": [
         "0xFFb740F9E7D12E019069c1Fa90AEc8D789913A9a"
@@ -27,7 +27,7 @@
       "cumulativeGasUsed": "0x33e43d",
       "logs": [
         {
-          "address": "0xc3df085eb9a31659e825643b763fc1f1e9fc950c",
+          "address": "0xdd6aDCF3b0Bf184B1b1A6858694A034D08D47efc",
           "topics": [
             "0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0",
             "0x0000000000000000000000000000000000000000000000000000000000000000",
@@ -53,7 +53,7 @@
       "effectiveGasPrice": "0x2e90edd000",
       "from": "0xffb740f9e7d12e019069c1fa90aec8d789913a9a",
       "to": null,
-      "contractAddress": "0xc3df085eb9a31659e825643b763fc1f1e9fc950c"
+      "contractAddress": "0xdd6aDCF3b0Bf184B1b1A6858694A034D08D47efc"
     }
   ],
   "libraries": [],

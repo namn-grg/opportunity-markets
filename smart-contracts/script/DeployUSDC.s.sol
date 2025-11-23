@@ -4,13 +4,13 @@ pragma solidity ^0.8.20;
 import {Script} from "forge-std/Script.sol";
 import {console2} from "forge-std/console2.sol";
 
-import {PREDToken} from "../src/PREDToken.sol";
+import {USDCToken} from "../src/USDCToken.sol";
 
-contract DeployPRED is Script {
+contract DeployUSDC is Script {
     function run() external {
         uint256 deployerKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerKey);
-        PREDToken token = new PREDToken();
+        USDCToken token = new USDCToken();
         vm.stopBroadcast();
 
         console2.log("USDC (demo) token deployed at", address(token));
